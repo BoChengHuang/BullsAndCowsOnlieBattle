@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="bootstrap/favicon.ico">
+
+    <title>Bulls and Cows Online-game for AI project</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <link href="bootstrap/assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="jumbotron-narrow.css" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <script src="bootstrap/assets/js/ie-emulation-modes-warning.js"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="header clearfix">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation" class="active"><a href="#">Home</a></li>
+            <li role="presentation"><a href="#">Github</a></li>
+            <li role="presentation"><a href="#">Contact</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">Bulls and Cows Online</h3>
+      </div>
+
+      <div class="jumbotron">
+        <h1 id="hello">Let's play a game</h1><br>
+        <p class="lead">Bulls and Cows is a famous game.</p>
+        <p class="lead">Rule: Guess a number(unrepeated every 0~9), if the order of the seperate number is the same as answer, get 1 A.</p>
+        <p class="lead">If the order of the seperate number isn't the same as answer but ans has the number, get 1 B.</p>
+        <p class="lead">One who gets 4A wins the game.</p><br><br>
+        <p id="playbtn"><a class="btn btn-lg btn-success" onclick="play()" role="button">Play right now</a></p>
+        <p id="enemybtn"><a class="btn btn-lg btn-success" onclick="enemy()" role="button">Choose a enemy</a></p>
+      </div>
+
+      <div class="row marketing">
+        <div class="col-lg-6">
+          <h4>User List</h4>
+          <p id="userList">None.</p>
+
+          <h4>Your guess</h4>
+          <p id="p1">ex: 5678 1A1B</p>
+
+        </div>
+
+        <div class="col-lg-6">
+          <h4>Your number</h4>
+          <p id="ans">ex: 1234</p>
+
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>&copy; 2015 Company, Inc.</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="bootstrap/assets/js/ie10-viewport-bug-workaround.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.3.7.js"></script>
+    <script>
+        var socket = io('http://127.0.0.1:1234');
+        var id;
+        var enm;
+        var isPlay = false;
+        var ans;
+        var guess_str;
+
+       socket.on('connect', function () {
+        console.log('connect to server...');
+       });
+       document.getElementById("enemybtn").style.visibility = 'hidden';
+        
+       socket.on('gameDisconnect', function() {
+           if (isPlay) {
+               alert("Someone disconnect...Please refresh this page tp play again...");
+           }
+       });
+       
+       socket.on('battle', function(msgin) {
+           isPlay = true;
+           if (msgin.enemy == id) {
+               ans = prompt(msgin.id + " wants to play with you.What's your secret number?", "");
+               while (!checkValid(ans)) {
+                   ans = prompt("Error format!!What's your secret number?", "");
+               }
+               document.getElementById("ans").innerHTML = ans;
+               document.getElementById('p1').innerHTML = "";
+               socket.emit('ready', {id: id, ans: ans});
+               document.getElementById("enemybtn").innerHTML = '';
+               console.log('battle mode');
+           }
+       });
+       
+       socket.on('userList', function(list) {
+           document.getElementById("userList").innerHTML = "";
+           for (var i = 0; i < list.length; i++) {
+               document.getElementById("userList").innerHTML += list[i] + "<br>";
+           }
+       });
+       
+       socket.on('guessTurn', function(msgin) {
+           if (msgin == id) {
+               guess = prompt("Guess your enemy's number", "");
+               while (!checkValid(guess)) {
+                   guess = prompt("Error format!!Guess your enemy's number", "");
+               }
+               guess_str = guess;
+               if (guess != null) {
+                   socket.emit('guess', {id: id, guess: guess});
+               }
+           }
+       });
+       
+       socket.on('result', function(msgin) {
+           console.log(msgin);
+           document.getElementById('p1').innerHTML += guess_str + " " + msgin.a + "A" + msgin.b + "B" + "<br>";
+       });
+       
+       socket.on('over', function(msgin) {
+           if (msgin == id) {
+               alert('You win!!');
+           } else {
+               alert('You lose!!');
+           }
+       });
+            
+        function play() {
+            id = prompt("What's your username or id", "");
+            
+            if (id != null) {
+                socket.emit('id', id);
+                document.getElementById("playbtn").innerHTML = '';
+                document.getElementById("hello").innerHTML = "Welcome " + id + "!";
+                document.getElementById("enemybtn").style.visibility = 'visible';
+            }
+        }
+        
+        function enemy() {
+            enm = prompt("Who do you want to play with?", "");
+            if (enm != null) {
+                document.getElementById("enemybtn").innerHTML = '';
+                console.log('battle mode');
+                socket.emit('play', {id: id, enemy: enm});
+                ans = prompt("What's your secret number?", "");
+                if (ans != null) {
+                    document.getElementById("ans").innerHTML = ans;
+                    document.getElementById('p1').innerHTML = "";
+                    socket.emit('ready', {id: id, ans: ans});
+                }
+            }
+        }
+        
+        function checkValid(number) {
+            if (number < 9999 && number != null) {
+                var n1 = Math.floor(number / 1000);
+                var n2 = Math.floor((number / 100) % 10);
+                var n3 = Math.floor((number / 10) % 10);
+                var n4 = Math.floor(number % 10);
+                
+                if (n1 != n2 && n1 != n3 && n1 != n4 && n2 != n3 && n2 != n4 && n3 != n4) {
+                    return true;
+                } else { return false; }
+            } else { return false; }
+        }
+    </script>
+  </body>
+</html>
