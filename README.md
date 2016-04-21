@@ -1,4 +1,4 @@
-# BullsAndCowsOnlieBattle
+# BullsAndCowsOnlineBattle
 
 Bulls and Cows game oneline by Node.js
 
