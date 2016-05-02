@@ -8,7 +8,7 @@ Bulls and Cows game oneline by Node.js
 # What is this repository for? ###
 
 * Quick summary: Bulls and Cows game oneline by Node.js.
-* Version 1.0.1
+* Version 1.1.0
 
 # How do I get set up? ###
 

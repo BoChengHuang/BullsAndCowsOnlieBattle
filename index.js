@@ -68,13 +68,13 @@ io.on('connection', function (socket) {
             checkAns(p2Ans, msgin.guess);
             isP1Turn = false;
             if (bulls == 4) {
-                socket.emit('over', p1ID);
+                io.emit('over', p1ID);
             }
         } else if (msgin.id == p2ID) {
             checkAns(p1Ans, msgin.guess);
             isP1Turn = true;
             if (bulls == 4) {
-                socket.emit('over', p2ID);
+                io.emit('over', p2ID);
             }
         }
         socket.emit('result', {a: bulls, b: cows});
